@@ -2,6 +2,7 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const uuid = require("./uuid");
 
 // Initialize an instance of Express.js
 const app = express();
@@ -20,6 +21,27 @@ app.get("/notes", (req,res) => {
 
 app.get("*", (req,res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// API routes
+app.get("/api/notes", (req,res) => {
+  const notes = JSON.parse(fs.readFileSync("db.json", "utf8"));
+  res.json(notes);
+});
+
+app.post("/api/notes", (req,res) => {
+  // Recieve new note to save in body
+  const newNote = req.body;
+  // Read existing notes
+  const notes = JSON.parse(fs.readFileSync("db.json","utf8"));
+  // Use helper function to assign a unique id to new note
+  newNote.id = uuid();
+  // Add new note to array
+  notes.push(newNote);
+  // Update db.json
+  fs.writeFileSync("db.json",JSON.stringify(notes));
+  // Return new note to client
+  res.json(newNote);
 });
 
 

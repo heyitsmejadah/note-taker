@@ -2,7 +2,12 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const util = require("util");
 const uuid = require("./uuid");
+
+// Async read and write file
+const readFileAsync = util.promisify(fs.readFile);
+const writeFileAsync = util.promisify(fs.writeFile);
 
 // Initialize an instance of Express.js
 const app = express();
@@ -24,24 +29,31 @@ app.get("*", (req,res) => {
 });
 
 // API routes
-app.get("/api/notes", (req,res) => {
-  const notes = JSON.parse(fs.readFileSync("db.json", "utf8"));
-  res.json(notes);
+app.get("/api/notes", function(req,res) {
+  readFileAsync("db.json","utf8").then(function(data) {
+    notes= [].concat(JSON.parse(data))
+    res.json(notes);
+  })
 });
 
-app.post("/api/notes", (req,res) => {
+app.post("/api/notes", function(req,res) {
   // Recieve new note to save in body
-  const newNote = req.body;
+  const note = req.body;
   // Read existing notes
-  const notes = JSON.parse(fs.readFileSync("db.json","utf8"));
-  // Use helper function to assign a unique id to new note
-  newNote.id = uuid();
-  // Add new note to array
-  notes.push(newNote);
-  // Update db.json
-  fs.writeFileSync("db.json",JSON.stringify(notes));
-  // Return new note to client
-  res.json(newNote);
+  readFileAsync("db.json","utf8").then(function(data) {
+    // Concatenate empty array with data returned
+    const notes = [].concat(JSON.parse(data));
+    // Use helper function to assign a unique id to new note
+    note.id = uuid();
+    // Add new note to array
+    notes.push(note);
+    return notes
+  }).then(function(notes) {
+    // Update db.json
+    writeFileAsync("db.json", JSON.stringify(notes))
+    // Return new note to client
+    res.json(note);
+  })
 });
 
 

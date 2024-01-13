@@ -15,16 +15,19 @@ const app = express();
 // Specify on which port the Express.js server will run
 const PORT = process.env.PORT || 3001;
 
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true}));
+
 // Static middleware pointing to the public folder
 app.use(express.static(path.join(__dirname, "public")));
-app.use(express.json());
 
 // HTML routes
 app.get("/notes", (req,res) => {
   res.sendFile(path.join(__dirname,"public", "notes.html"));
 });
 
-app.get("*", (req,res) => {
+app.get("/", (req,res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
